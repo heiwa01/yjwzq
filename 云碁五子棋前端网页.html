@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>云碁五子棋-网页联机版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        body {
+            background-color: #7c4f2b;
+            background-image: url("https://img0.baidu.com/it/u=1292427333,3808203221&fm=253&fmt=auto&app=138&f=JPEG?w=1200&h=800");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            font-family: "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+        }
+        body.lock-scroll {
+            overflow: hidden;
+        }
+        .stone-frame {
+            position: relative;
+            padding: 30px;
+            border-radius: 24px;
+            background:
+                linear-gradient(135deg, rgba(58, 73, 55, 0.90), rgba(84, 105, 79, 0.95)),
+                url("https://img0.baidu.com/it/u=3310070709,3034482030&fm=253&fmt=auto&app=138&f=JPEG?w=800&h=600");
+            background-size: cover;
+            background-blend-mode: overlay;
+            box-shadow:
+                inset 0 0 18px rgba(0, 0, 0, 0.55),
+                0 0 25px rgba(0, 0, 0, 0.45);
+            max-width: 580px;
+            width: 100%;
+        }
+        .stone-frame::before,
+        .stone-frame::after {
+            content: "";
+            position: absolute;
+            width: 85px;
+            height: 85px;
+            background-image: url("https://img0.baidu.com/it/u=1929738806,2679331040&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=375");
+            background-size: cover;
+            background-position: center;
+            border-radius: 50%;
+            opacity: 0.85;
+            box-shadow: inset 0 0 12px rgba(0,0,0,0.6);
+        }
+        .stone-frame::before {
+            top: -12px;
+            left: -12px;
+        }
+        .stone-frame::after {
+            bottom: -12px;
+            right: -12px;
+        }
+        .stone-frame-inner {
+            position: relative;
+            z-index: 2;
+            background-color: rgba(124, 79, 43, 0.88);
+            border-radius: 18px;
+            padding: 40px 30px 40px;
+            box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.45);
+        }
+        .lobby-stone-frame{
+            position: relative;
+            padding:30px;
+            border-radius:24px;
+            background:
+                linear-gradient(140deg,#44484c,#63686c),
+                url("https://img2.baidu.com/it/u=2773013114,3477711323&fm=253&fmt=auto&app=138&f=JPEG?w=1000&h=700");
+            background-blend-mode: overlay;
+            background-size:cover;
+            box-shadow:inset 0 0 20px rgba(0,0,0,0.6),0 0 30px rgba(0,0,0,0.5);
+            max-width:780px;
+            width:100%;
+            display:none;
+        }
+        .lobby-stone-frame.show{
+            display:block;
+        }
+        .lobby-stone-frame::before,.lobby-stone-frame::after{
+            content:"";
+            position:absolute;
+            width:85px;
+            height:85px;
+            background-image:url("https://img0.baidu.com/it/u=1929738806,2679331040&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=375");
+            background-size:cover;
+            border-radius:50%;
+            opacity:0.85;
+            box-shadow:inset 0 0 12px #000;
+        }
+        .lobby-stone-frame::before{
+            top:-12px;
+            left:-12px;
+        }
+        .lobby-stone-frame::after{
+            bottom:-12px;
+            right:-12px;
+        }
+        .lobby-inner{
+            position:relative;
+            z-index:2;
+            background-color:rgba(40,43,46,0.78);
+            border-radius:18px;
+            padding:32px 26px;
+        }
+        .lobby-title{
+            font-size:42px;
+            color:#ffffff;
+            text-shadow:2px 2px 6px #000000;
+            text-align:center;
+            margin-bottom:26px;
+            font-weight:bold;
+        }
+        .search-row{
+            display:flex;
+            justify-content:center;
+            gap:0px;
+            margin-bottom:20px;
+        }
+        .lobby-search-input{
+            max-width:320px;
+            width:100%;
+            height:48px;
+            font-size:18px;
+            padding:0 14px;
+            border-radius:8px 0 0 8px;
+            border:none;
+            outline:none;
+        }
+        .btn-search-room{
+            width:48px;
+            height:48px;
+            background-color:#27ae60;
+            border:none;
+            border-radius:0 8px 8px 0;
+            color:white;
+            font-size:22px;
+            cursor:pointer;
+        }
+        .btn-search-room:hover{
+            background-color:#219653;
+        }
+        .divider-line{
+            width:100%;
+            height:2px;
+            background-color:#aaaaaa;
+            margin-bottom:16px;
+        }
+        .room-scroll-wrap{
+            height:320px;
+            overflow-y:auto;
+            padding:10px 6px;
+            background-color:rgba(0,0,0,0.25);
+            border-radius:10px;
+            margin-bottom:18px;
+        }
+        .empty-tip{
+            text-align:center;
+            color:#dddddd;
+            font-size:20px;
+            padding-top:100px;
+        }
+        .room-grid{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:16px;
+        }
+        .room-item-btn{
+            background-color:rgba(0,0,0,0.68);
+            border:2px solid #777777;
+            border-radius:12px;
+            height:140px;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            color:#ffffff;
+            cursor:pointer;
+            transition:0.2s;
+        }
+        .room-item-btn:hover{
+            border-color:#ffffff;
+            transform:scale(1.02);
+        }
+        .room-id-text{
+            font-size:24px;
+            margin-bottom:8px;
+        }
+        .room-count-text{
+            font-size:19px;
+        }
+        .lobby-bottom-bar{
+            display:flex;
+            gap:18px;
+            justify-content:center;
+            flex-wrap:wrap;
+        }
+        .lobby-btn{
+            padding:12px 28px;
+            border:none;
+            border-radius:10px;
+            font-size:18px;
+            color:white;
+            cursor:pointer;
+        }
+        .btn-refresh{
+            background-color:#c0392b;
+        }
+        .btn-refresh:hover{
+            background-color:#a93226;
+        }
+        .btn-create-room{
+            background-color:#f39c12;
+        }
+        .btn-create-room:hover{
+            background-color:#d68910;
+        }
+        .btn-back-main{
+            background-color:#34495e;
+        }
+        .btn-back-main:hover{
+            background-color:#2c3e50;
+        }
+        .main-title {
+            font-size: 52px;
+            color: #fff8e8;
+            text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.7);
+            margin-bottom: 40px;
+            font-weight: 700;
+            text-align: center;
+        }
+        .btn-wrap {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            justify-items: center;
+        }
+        .game-card-btn {
+            width: 220px;
+            height: 260px;
+            border-radius: 16px;
+            border: 3px solid rgba(255, 255, 255, 0.35);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            transition: 0.28s ease-out;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+            padding-top: 28px;
+        }
+        .btn-single {
+            background-color: rgba(41, 128, 185, 0.78);
+        }
+        .btn-hall {
+            background-color: rgba(39, 174, 96, 0.78);
+        }
+        .btn-about {
+            background-color: rgba(155, 89, 182, 0.78);
+        }
+        .btn-account {
+            background-color: rgba(230, 126, 34, 0.78);
+        }
+        .game-card-btn:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+        .card-icon {
+            font-size: 90px;
+            color: #ffffff;
+            margin-bottom: auto;
+            margin-top: 10px;
+        }
+        .card-text {
+            font-size: 28px;
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+        .modal-mask {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0,0,0,0.55);
+            z-index: 2000 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        .modal-mask.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-box {
+            background-color: #ffffff;
+            width: 520px;
+            max-width: 90vw;
+            border-radius:14px;
+            position: relative;
+            padding:32px;
+            transform: scale(0.94);
+            transition: transform 0.2s ease;
+        }
+        .modal-mask.show .modal-box{
+            transform: scale(1);
+        }
+        .modal-close {
+            position:absolute;
+            top:14px;
+            right:18px;
+            font-size:28px;
+            cursor:pointer;
+            color:#444444;
+            user-select:none;
+        }
+        .modal-close:hover {
+            color:#d03030;
+        }
+        .modal-title {
+            font-size:28px;
+            font-weight:bold;
+            margin-bottom:22px;
+            color:#222222;
+        }
+        .modal-content {
+            font-size:17px;
+            line-height:1.75;
+            color:#333333;
+        }
+        .input-tip{
+            color:#999;
+            margin-bottom:12px;
+        }
+        .name-input{
+            width:100%;
+            font-size:18px;
+            padding:12px 14px;
+            border:2px solid #cccccc;
+            border-radius:8px;
+            margin-bottom:20px;
+        }
+        .btn-confirm-green{
+            width:100%;
+            padding:12px;
+            background-color:#27ae60;
+            color:white;
+            border:none;
+            border-radius:8px;
+            font-size:20px;
+            cursor:pointer;
+        }
+        .btn-confirm-green:hover{
+            background-color:#219653;
+        }
+        .btn-confirm-blue{
+            width:100%;
+            padding:12px;
+            background-color:#2980b9;
+            color:white;
+            border:none;
+            border-radius:8px;
+            font-size:20px;
+            cursor:pointer;
+        }
+        .btn-confirm-blue:hover{
+            background-color:#1f618d;
+        }
+        .single-game-mask{
+            position:fixed;
+            top:0;
+            left:0;
+            width:100vw;
+            height:100vh;
+            background:#73af60;
+            z-index:1000;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            opacity:0;
+            pointer-events:none;
+            transition:opacity 0.2s ease;
+        }
+        .single-game-mask.show{
+            opacity:1;
+            pointer-events:auto;
+        }
+        .online-game-mask{
+            position:fixed;
+            top:0;
+            left:0;
+            width:100vw;
+            height:100vh;
+            background:#73af60;
+            z-index:1000;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            opacity:0;
+            pointer-events:none;
+            transition:opacity 0.2s ease;
+        }
+        .online-game-mask.show{
+            opacity:1;
+            pointer-events:auto;
+        }
+        .player-info-box{
+            position:absolute;
+            top:24px;
+            background:#ffffff;
+            padding:10px 14px;
+            border-radius:10px;
+            font-size:18px;
+            display:flex;
+            align-items:center;
+            gap:8px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.35);
+        }
+        .info-black{
+            left:24px;
+        }
+        .info-white{
+            right:24px;
+        }
+        .self-side-tip{
+            position:absolute;
+            top:86px;
+            left:50%;
+            transform:translateX(-50%);
+            background:#ffffff;
+            padding:6px 16px;
+            border-radius:8px;
+            font-size:17px;
+            box-shadow:0 3px 10px rgba(0,0,0,0.3);
+        }
+        .chess-board-wrap{
+            position:relative;
+        }
+        #chessCanvas{
+            background:#deb887;
+            border:4px solid #6b4423;
+            max-width:92vw;
+        }
+        #onlineCanvas{
+            background:#deb887;
+            border:4px solid #6b4423;
+            max-width:92vw;
+        }
+        .online-chat-area{
+            width:600px;
+            max-width:92vw;
+            margin-top:14px;
+            background:rgba(255,255,255,0.85);
+            border-radius:8px;
+            padding:8px;
+        }
+        .chat-log{
+            height:100px;
+            overflow-y:auto;
+            font-size:14px;
+            margin-bottom:6px;
+            word-break: break-all;
+        }
+        .chat-input-row{
+            display:flex;
+            gap:6px;
+        }
+        .chat-input{
+            flex-grow:1;
+            padding:6px;
+        }
+        .btn-send-chat{
+            padding:6px 14px;
+            background:#27ae60;
+            color:white;
+            border:none;
+            border-radius:4px;
+            cursor:pointer;
+        }
+        .btn-send-chat:hover{
+            background:#219653;
+        }
+        .online-bottom-bar{
+            margin-top:14px;
+        }
+        .game-bottom-bar{
+            margin-top:20px;
+            display:flex;
+            gap:20px;
+        }
+        .game-btn{
+            padding:10px 26px;
+            font-size:18px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            color:#fff;
+        }
+        .btn-regret{
+            background-color:#c0392b;
+        }
+        .btn-regret:hover{
+            background-color:#a93226;
+        }
+        .btn-exit-game{
+            background-color:#2c3e50;
+        }
+        .btn-exit-game:hover{
+            background-color:#1a252f;
+        }
+        @media (max-width: 720px) {
+            .main-title {
+                font-size: 38px;
+            }
+            .btn-wrap {
+                grid-template-columns: 1fr;
+            }
+            .game-card-btn {
+                width: 200px;
+                height: 240px;
+            }
+            .stone-frame {
+                margin: 0 10px;
+            }
+            .stone-frame-inner{
+                padding:30px 20px 30px;
+            }
+            .player-info-box{
+                font-size:14px;
+                padding:6px 10px;
+            }
+            .info-black{
+                left:10px;
+            }
+            .info-white{
+                right:10px;
+            }
+            .lobby-title{
+                font-size:30px;
+            }
+            .room-grid{
+                grid-template-columns:1fr;
+            }
+            .stone-frame::before,.stone-frame::after,
+            .lobby-stone-frame::before,.lobby-stone-frame::after{
+                display:none;
+            }
+            .self-side-tip{
+                font-size:14px;
+                top:72px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stone-frame" id="mainPage">
+        <div class="stone-frame-inner">
+            <h1 class="main-title">云碁五子棋-网页联机版</h1>
+            <div class="btn-wrap">
+                <div class="game-card-btn btn-single" id="singleBtn">
+                    <div class="card-icon">🎮</div>
+                    <div class="card-text">单机游戏</div>
+                </div>
+                <div class="game-card-btn btn-hall" id="hallBtn">
+                    <div class="card-icon">🌐</div>
+                    <div class="card-text">联机大厅</div>
+                </div>
+                <div class="game-card-btn btn-about" id="aboutBtn">
+                    <div class="card-icon">📖</div>
+                    <div class="card-text">制作详情</div>
+                </div>
+                <div class="game-card-btn btn-account" id="accountBtn">
+                    <div class="card-icon">👤</div>
+                    <div class="card-text">编辑账号</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="lobby-stone-frame" id="lobbyPage">
+        <div class="lobby-inner">
+            <h2 class="lobby-title">联机大厅</h2>
+            <div class="search-row">
+                <input class="lobby-search-input" id="searchRoomInput" placeholder="请输入6位房间ID">
+                <button class="btn-search-room" id="btnSearchRoom">🔍</button>
+            </div>
+            <div class="divider-line"></div>
+            <div class="room-scroll-wrap" id="roomScrollWrap">
+                <div class="empty-tip" id="emptyRoomTip">暂时没有发现其他房间，自己创建一个吧！</div>
+                <div class="room-grid" id="roomGridContainer"></div>
+            </div>
+            <div class="lobby-bottom-bar">
+                <button class="lobby-btn btn-refresh" id="btnRefreshRoom">🔄 刷新</button>
+                <button class="lobby-btn btn-create-room" id="btnOpenCreateRoom">➕ 创建房间</button>
+                <button class="lobby-btn btn-back-main" id="btnBackToMain">⬅ 返回主界面</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-mask" id="aboutMask">
+        <div class="modal-box">
+            <span class="modal-close" id="closeModal">×</span>
+            <h2 class="modal-title">《制作详情》</h2>
+            <div class="modal-content">
+                <p>云碁五子棋 - 网页联机版</p>
+                <br>
+                <p>基于HTML+CSS+JavaScript前端 + Deno WebSocket后端开发。</p>
+                <p>支持本地单机、多人联机大厅，创建房间、加入房间对战。</p>
+                <br>
+                <p>音效：石头撞击木板点击音效</p>
+                <p>界面风格：古风木质石头边框UI</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-mask" id="accountMask">
+        <div class="modal-box">
+            <span class="modal-close" id="closeAccountModal">×</span>
+            <h2 class="modal-title">编辑账号</h2>
+            <div class="modal-content">
+                <div class="input-tip" id="nameTip"></div>
+                <input class="name-input" id="userNameInput" type="text">
+                <button class="btn-confirm-green" id="confirmNameBtn">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-mask" id="createRoomMask">
+        <div class="modal-box">
+            <span class="modal-close" id="closeCreateRoom">×</span>
+            <h2 class="modal-title">创建房间</h2>
+            <div class="modal-content">
+                <div class="input-tip">请输入6位数字房间ID</div>
+                <input class="name-input" id="createRoomIdInput" placeholder="6位数字房间编号">
+                <button class="btn-confirm-green" id="doCreateRoomBtn">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-mask" id="cannotJoinMask">
+        <div class="modal-box">
+            <span class="modal-close" id="closeCannotJoin">×</span>
+            <h2 class="modal-title">提示</h2>
+            <div class="modal-content">
+                <p id="cannotJoinText">无法加入房间！房间已满。</p>
+                <br>
+                <button class="btn-confirm-blue" id="cannotJoinOk">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-mask" id="errorTipMask">
+        <div class="modal-box">
+            <span class="modal-close" id="closeErrorTip">×</span>
+            <h2 class="modal-title">提示</h2>
+            <div class="modal-content">
+                <p id="errorTipText"></p>
+                <br>
+                <button class="btn-confirm-blue" id="errorTipOk">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="single-game-mask" id="singleGameMask">
+        <div class="player-info-box info-black">
+            <span>⚫</span>
+            <span>黑方：<span id="blackPlayerName"></span></span>
+        </div>
+        <div class="player-info-box info-white">
+            <span>⚪</span>
+            <span>白方：<span id="whitePlayerName"></span></span>
+        </div>
+        <div class="chess-board-wrap">
+            <canvas id="chessCanvas" width="600" height="600"></canvas>
+        </div>
+        <div class="game-bottom-bar">
+            <button class="game-btn btn-regret" id="btnRegret">悔棋</button>
+            <button class="game-btn btn-exit-game" id="btnExitGame">退出对局</button>
+        </div>
+    </div>
+
+    <div class="online-game-mask" id="onlineGameMask">
+        <div class="player-info-box info-black">
+            <span>⚫</span>
+            <span>黑方：<span id="onlineBlackName"></span></span>
+        </div>
+        <div class="player-info-box info-white">
+            <span>⚪</span>
+            <span>白方：<span id="onlineWhiteName"></span></span>
+        </div>
+        <div class="self-side-tip" id="selfSideTip"></div>
+        <div class="chess-board-wrap">
+            <canvas id="onlineCanvas" width="600" height="600"></canvas>
+        </div>
+        <div class="online-chat-area">
+            <div class="chat-log" id="chatLogBox"></div>
+            <div class="chat-input-row">
+                <input class="chat-input" id="chatMsgInput" placeholder="输入聊天消息">
+                <button class="btn-send-chat" id="sendChatBtn">发送</button>
+            </div>
+        </div>
+        <div class="online-bottom-bar">
+            <button class="game-btn btn-exit-game" id="onlineExitBtn">退出对局</button>
+        </div>
+    </div>
+
+    <div class="modal-mask" id="gameResultMask">
+        <div class="modal-box">
+            <span class="modal-close" id="closeGameResult">×</span>
+            <h2 class="modal-title">游戏结束</h2>
+            <div class="modal-content">
+                <p id="resultText"></p>
+                <br>
+                <button class="btn-confirm-blue" id="gameResultOk">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-mask" id="exitConfirmMask">
+        <div class="modal-box">
+            <span class="modal-close" id="closeExitConfirm">×</span>
+            <h2 class="modal-title">退出对局</h2>
+            <div class="modal-content">
+                <p>你确定要结束本局游戏吗？结束后将会清除本局游戏的数据！</p>
+                <br>
+                <button class="btn-confirm-blue" id="exitConfirmOk">确定</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+        let audioCtx = null;
+        function playStoneBoardClick() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = "triangle";
+            osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.12);
+            gain.gain.setValueAtTime(0.45, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+        }
+
+        let userName = "";
+        const storedName = localStorage.getItem("cloudGoUserName");
+        if(storedName){
+            userName = storedName;
+        }
+        let currentRoomId = "";
+        let onlineRoomPlayerCount = 0;
+        let mySide = 0;
+        let isJoining = false;
+        let ws = null;
+
+        const mainPage = document.querySelector("#mainPage");
+        const lobbyPage = document.querySelector("#lobbyPage");
+        const btnSingle = document.querySelector('#singleBtn');
+        const btnHall = document.querySelector('#hallBtn');
+        const btnAbout = document.querySelector('#aboutBtn');
+        const btnAccount = document.querySelector('#accountBtn');
+        const searchRoomInput = document.querySelector("#searchRoomInput");
+        const btnSearchRoom = document.querySelector("#btnSearchRoom");
+        const roomScrollWrap = document.querySelector("#roomScrollWrap");
+        const emptyRoomTip = document.querySelector("#emptyRoomTip");
+        const roomGridContainer = document.querySelector("#roomGridContainer");
+        const btnRefreshRoom = document.querySelector("#btnRefreshRoom");
+        const btnOpenCreateRoom = document.querySelector("#btnOpenCreateRoom");
+        const btnBackToMain = document.querySelector("#btnBackToMain");
+        const createRoomMask = document.querySelector("#createRoomMask");
+        const closeCreateRoom = document.querySelector("#closeCreateRoom");
+        const createRoomIdInput = document.querySelector("#createRoomIdInput");
+        const doCreateRoomBtn = document.querySelector("#doCreateRoomBtn");
+        const cannotJoinMask = document.querySelector("#cannotJoinMask");
+        const closeCannotJoin = document.querySelector("#closeCannotJoin");
+        const cannotJoinText = document.querySelector("#cannotJoinText");
+        const cannotJoinOk = document.querySelector("#cannotJoinOk");
+        const errorTipMask = document.querySelector("#errorTipMask");
+        const closeErrorTip = document.querySelector("#closeErrorTip");
+        const errorTipText = document.querySelector("#errorTipText");
+        const errorTipOk = document.querySelector("#errorTipOk");
+        const mask = document.querySelector('#aboutMask');
+        const closeBtn = document.querySelector('#closeModal');
+        const accountMask = document.querySelector('#accountMask');
+        const closeAccountModal = document.querySelector('#closeAccountModal');
+        const userNameInput = document.querySelector('#userNameInput');
+        const nameTip = document.querySelector('#nameTip');
+        const confirmNameBtn = document.querySelector('#confirmNameBtn');
+        const singleGameMask = document.querySelector('#singleGameMask');
+        const canvas = document.querySelector('#chessCanvas');
+        const ctx = canvas.getContext('2d');
+        const gameResultMask = document.querySelector('#gameResultMask');
+        const closeGameResult = document.querySelector('#closeGameResult');
+        const resultText = document.querySelector('#resultText');
+        const gameResultOk = document.querySelector('#gameResultOk');
+        const blackPlayerName = document.querySelector("#blackPlayerName");
+        const whitePlayerName = document.querySelector("#whitePlayerName");
+        const btnRegret = document.querySelector("#btnRegret");
+        const btnExitGame = document.querySelector("#btnExitGame");
+        const exitConfirmMask = document.querySelector("#exitConfirmMask");
+        const closeExitConfirm = document.querySelector("#closeExitConfirm");
+        const exitConfirmOk = document.querySelector("#exitConfirmOk");
+        const onlineGameMask = document.querySelector("#onlineGameMask");
+        const onlineCanvas = document.querySelector("#onlineCanvas");
+        const onlineCtx = onlineCanvas.getContext('2d');
+        const onlineBlackName = document.querySelector("#onlineBlackName");
+        const onlineWhiteName = document.querySelector("#onlineWhiteName");
+        const chatLogBox = document.querySelector("#chatLogBox");
+        const chatMsgInput = document.querySelector("#chatMsgInput");
+        const sendChatBtn = document.querySelector("#sendChatBtn");
+        const onlineExitBtn = document.querySelector("#onlineExitBtn");
+        const selfSideTip = document.querySelector("#selfSideTip");
+
+        const BOARD_SIZE = 20;
+
+        //统一发送ws消息工具
+        function sendWsMsg(payload){
+            if(!ws || ws.readyState !== WebSocket.OPEN){
+                showErrorTip("未连接服务器！");
+                return;
+            }
+            ws.send(JSON.stringify(payload));
+        }
+
+        //====单机五子棋====
+        let cellSize;
+        let board = [];
+        let currentTurn = 1;
+        let gameOverFlag = false;
+        let winPoints = [];
+        let stepHistory = [];
+
+        function initBoard(){
+            board = [];
+            for(let i=0;i<BOARD_SIZE;i++){
+                board[i] = [];
+                for(let j=0;j<BOARD_SIZE;j++){
+                    board[i][j] = 0;
+                }
+            }
+            currentTurn = 1;
+            gameOverFlag = false;
+            winPoints = [];
+            stepHistory = [];
+        }
+        function drawBoard(){
+            const w = canvas.width;
+            const h = canvas.height;
+            cellSize = w / BOARD_SIZE;
+            ctx.clearRect(0,0,w,h);
+            ctx.fillStyle = "#deb887";
+            ctx.fillRect(0,0,w,h);
+            ctx.strokeStyle="#333333";
+            ctx.lineWidth=1;
+            for(let i=0;i<BOARD_SIZE;i++){
+                ctx.beginPath();
+                ctx.moveTo(cellSize*0.5 + i*cellSize, cellSize*0.5);
+                ctx.lineTo(cellSize*0.5 + i*cellSize, h - cellSize*0.5);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(cellSize*0.5, cellSize*0.5 + i*cellSize);
+                ctx.lineTo(w - cellSize*0.5, cellSize*0.5 + i*cellSize);
+                ctx.stroke();
+            }
+            for(let y=0;y<BOARD_SIZE;y++){
+                for(let x=0;x<BOARD_SIZE;x++){
+                    const val = board[y][x];
+                    if(val === 0) continue;
+                    const cx = x*cellSize + cellSize*0.5;
+                    const cy = y*cellSize + cellSize*0.5;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, cellSize*0.42,0,Math.PI*2);
+                    ctx.fillStyle = val===1 ? "#000000":"#ffffff";
+                    ctx.fill();
+                    ctx.strokeStyle="#222";
+                    ctx.stroke();
+                    if(winPoints.some(p=>p.x===x&&p.y===y)){
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, cellSize*0.52,0,Math.PI*2);
+                        ctx.strokeStyle="#ff2222";
+                        ctx.lineWidth=3;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+        function checkWin(x,y,color){
+            const dirs = [[1,0],[0,1],[1,1],[1,-1]];
+            for(let d of dirs){
+                let dx = d[0];
+                let dy = d[1];
+                let points = [{x,y}];
+                let cx = x+dx; let cy = y+dy;
+                while(cx>=0&&cx<BOARD_SIZE&&cy>=0&&cy<BOARD_SIZE&&board[cy][cx]===color){
+                    points.push({x:cx,y:cy}); cx+=dx; cy+=dy;
+                }
+                cx = x-dx; cy = y-dy;
+                while(cx>=0&&cx<BOARD_SIZE&&cy>=0&&cy<BOARD_SIZE&&board[cy][cx]===color){
+                    points.push({x:cx,y:cy}); cx-=dx; cy-=dy;
+                }
+                if(points.length >=5) return points;
+            }
+            return [];
+        }
+        canvas.onclick = function(e){
+            if(gameOverFlag) return;
+            const rect = canvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+            let col = Math.floor(mx / cellSize);
+            let row = Math.floor(my / cellSize);
+            if(col<0||col>=BOARD_SIZE||row<0||row>=BOARD_SIZE) return;
+            if(board[row][col]!==0) return;
+            playStoneBoardClick();
+            board[row][col] = currentTurn;
+            stepHistory.push({x:col,y:row,turn:currentTurn});
+            drawBoard();
+            const win = checkWin(col,row,currentTurn);
+            if(win.length >=5){
+                gameOverFlag = true;
+                winPoints = win;
+                drawBoard();
+                setTimeout(()=>{
+                    showGameResult(currentTurn ===1 ? "黑方胜利" : "白方胜利");
+                },1000);
+                return;
+            }
+            currentTurn = currentTurn === 1 ? 2 : 1;
+        }
+        function regretStep(){
+            if(gameOverFlag) return;
+            if(stepHistory.length <=0) return;
+            playStoneBoardClick();
+            const last = stepHistory.pop();
+            board[last.y][last.x] = 0;
+            currentTurn = last.turn;
+            drawBoard();
+        }
+        function openSingleGame(){
+            playStoneBoardClick();
+            initBoard();
+            blackPlayerName.innerText = userName;
+            whitePlayerName.innerText = userName;
+            drawBoard();
+            singleGameMask.classList.add('show');
+            document.body.classList.add("lock-scroll");
+        }
+        function closeSingleGame(){
+            singleGameMask.classList.remove('show');
+            gameResultMask.classList.remove('show');
+            exitConfirmMask.classList.remove('show');
+            initBoard();
+            document.body.classList.remove("lock-scroll");
+        }
+        function showGameResult(text){
+            resultText.innerText = text;
+            gameResultMask.classList.add('show');
+        }
+        function closeGameResultModal(){
+            gameResultMask.classList.remove('show');
+            if(singleGameMask.classList.contains("show")){
+                closeSingleGame();
+            }else{
+                onlineGameOverFlag = false;
+                closeOnlineGameRoom();
+            }
+        }
+        function openExitConfirm(){
+            if(exitConfirmMask.classList.contains("show")) return;
+            playStoneBoardClick();
+            exitConfirmMask.classList.add('show');
+            document.body.classList.add("lock-scroll");
+        }
+        function closeExitConfirmModal(){
+            exitConfirmMask.classList.remove('show');
+            document.body.classList.remove("lock-scroll");
+        }
+        function confirmExitGame(){
+            playStoneBoardClick();
+            closeExitConfirmModal();
+            if(singleGameMask.classList.contains("show")){
+                closeSingleGame();
+            }else{
+                closeOnlineGameRoom();
+            }
+        }
+
+        //====联机对局====
+        let onlineBoard = [];
+        let onlineTurn = 1;
+        let onlineGameOverFlag = false;
+        let onlineWinPoints = [];
+
+        function initOnlineBoard(){
+            onlineBoard = [];
+            for(let i=0;i<BOARD_SIZE;i++){
+                onlineBoard[i] = [];
+                for(let j=0;j<BOARD_SIZE;j++){
+                    onlineBoard[i][j] = 0;
+                }
+            }
+            onlineTurn =1;
+            onlineGameOverFlag = false;
+            onlineWinPoints = [];
+        }
+        function drawOnlineBoard(){
+            const w = onlineCanvas.width;
+            const h = onlineCanvas.height;
+            const cSize = w / BOARD_SIZE;
+            onlineCtx.clearRect(0,0,w,h);
+            onlineCtx.fillStyle="#deb887";
+            onlineCtx.fillRect(0,0,w,h);
+            onlineCtx.strokeStyle="#333";
+            onlineCtx.lineWidth=1;
+            for(let i=0;i<BOARD_SIZE;i++){
+                onlineCtx.beginPath();
+                onlineCtx.moveTo(cSize*0.5+i*cSize,cSize*0.5);
+                onlineCtx.lineTo(cSize*0.5+i*cSize, h-cSize*0.5);
+                onlineCtx.stroke();
+                onlineCtx.beginPath();
+                onlineCtx.moveTo(cSize*0.5, cSize*0.5+i*cSize);
+                onlineCtx.lineTo(w-cSize*0.5,cSize*0.5+i*cSize);
+                onlineCtx.stroke();
+            }
+            for(let y=0;y<BOARD_SIZE;y++){
+                for(let x=0;x<BOARD_SIZE;x++){
+                    const v = onlineBoard[y][x];
+                    if(v===0) continue;
+                    const cx = x*cSize + cSize*0.5;
+                    const cy = y*cSize + cSize*0.5;
+                    onlineCtx.beginPath();
+                    onlineCtx.arc(cx,cy,cSize*0.42,0,Math.PI*2);
+                    onlineCtx.fillStyle = v===1 ? "#000000":"#ffffff";
+                    onlineCtx.fill();
+                    onlineCtx.strokeStyle="#222";
+                    onlineCtx.stroke();
+                    if(onlineWinPoints.some(p=>p.x===x&&p.y===y)){
+                        onlineCtx.beginPath();
+                        onlineCtx.arc(cx,cy,cSize*0.52,0,Math.PI*2);
+                        onlineCtx.strokeStyle="#ff2222";
+                        onlineCtx.lineWidth=3;
+                        onlineCtx.stroke();
+                    }
+                }
+            }
+        }
+        function onlineCheckWin(x,y,color){
+            const dirs = [[1,0],[0,1],[1,1],[1,-1]];
+            for(let d of dirs){
+                let dx = d[0];
+                let dy = d[1];
+                let points = [{x,y}];
+                let cx = x+dx; let cy = y+dy;
+                while(cx>=0&&cx<BOARD_SIZE&&cy>=0&&cy<BOARD_SIZE&&onlineBoard[cy][cx]===color){
+                    points.push({x:cx,y:cy}); cx+=dx; cy+=dy;
+                }
+                cx = x-dx; cy = y-dy;
+                while(cx>=0&&cx<BOARD_SIZE&&cy>=0&&cy<BOARD_SIZE&&onlineBoard[cy][cx]===color){
+                    points.push({x:cx,y:cy}); cx-=dx; cy-=dy;
+                }
+                if(points.length >=5) return points;
+            }
+            return [];
+        }
+
+        onlineCanvas.onclick = function(e){
+            if(onlineGameOverFlag) return;
+            if(onlineRoomPlayerCount < 2){
+                showErrorTip("等待另一位玩家进入房间后才可以落子！");
+                return;
+            }
+            if(mySide === 0){
+                showErrorTip("尚未分配你的执棋身份！");
+                return;
+            }
+            const rect = onlineCanvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+            const cSize = onlineCanvas.width / BOARD_SIZE;
+            let col = Math.floor(mx / cSize);
+            let row = Math.floor(my / cSize);
+            if(col<0||col>=BOARD_SIZE||row<0||row>=BOARD_SIZE) return;
+            if(onlineBoard[row][col]!==0) return;
+            playStoneBoardClick();
+            sendWsMsg({type:"placeChess",data:{roomId:currentRoomId, pos:col + row*BOARD_SIZE}});
+        };
+
+        const MAX_CHAT_LEN = 200;
+        function sendChatMessage(){
+            const text = chatMsgInput.value.trim();
+            if(!text) return;
+            if(text.length > MAX_CHAT_LEN){
+                showErrorTip(`聊天消息不能超过${MAX_CHAT_LEN}个字符！`);
+                return;
+            }
+            sendWsMsg({type:"chatMessage",data:{roomId:currentRoomId,msg:text,sender:userName}});
+            chatLogBox.innerHTML += `<div>${userName}: ${text}</div>`;
+            chatLogBox.scrollTop = chatLogBox.scrollHeight;
+            chatMsgInput.value = "";
+        }
+
+        function showErrorTip(text){
+            errorTipText.innerText = text;
+            errorTipMask.classList.add("show");
+            document.body.classList.add("lock-scroll");
+        }
+        function closeErrorTipFunc(){
+            errorTipMask.classList.remove("show");
+            document.body.classList.remove("lock-scroll");
+        }
+
+        function leaveRoom(){
+            if(!currentRoomId) return;
+            sendWsMsg({type:"leaveRoom",data:{roomId:currentRoomId}});
+            currentRoomId = "";
+            onlineRoomPlayerCount = 0;
+            mySide = 0;
+            selfSideTip.innerText = "";
+        }
+
+        function openOnlineGameRoom(roomId){
+            playStoneBoardClick();
+            currentRoomId = roomId;
+            onlineRoomPlayerCount = 0;
+            mySide = 0;
+            selfSideTip.innerText = "";
+            initOnlineBoard();
+            drawOnlineBoard();
+            chatLogBox.innerHTML = "";
+            onlineBlackName.innerText = "";
+            onlineWhiteName.innerText = "";
+            onlineGameMask.classList.add("show");
+            document.body.classList.add("lock-scroll");
+            sendWsMsg({type:"setUserName",data: userName});
+        }
+
+        function closeOnlineGameRoom(){
+            leaveRoom();
+            isJoining = false;
+            onlineGameMask.classList.remove("show");
+            chatLogBox.innerHTML = "";
+            document.body.classList.remove("lock-scroll");
+        }
+
+        let terminalRoomList = [];
+
+        function createRoom(roomId){
+            if(!/^\d{6}$/.test(roomId)){
+                showErrorTip("房间ID必须为6位数字！");
+                return;
+            }
+            sendWsMsg({type:"createRoom",data:{roomId:roomId}});
+            createRoomMask.classList.remove("show");
+            document.body.classList.remove("lock-scroll");
+        }
+
+        function joinRoom(roomId){
+            if(isJoining) return;
+            const targetRoom = terminalRoomList.find(r=>r.roomId === roomId);
+            if(!targetRoom){
+                cannotJoinText.innerText = "无法加入！找不到该房间";
+                cannotJoinMask.classList.add("show");
+                document.body.classList.add("lock-scroll");
+                return;
+            }
+            if(targetRoom.playerCount !== 1){
+                cannotJoinText.innerText = "无法加入房间！房间已满。";
+                cannotJoinMask.classList.add("show");
+                document.body.classList.add("lock-scroll");
+                return;
+            }
+            isJoining = true;
+            sendWsMsg({type:"joinRoom",data:{roomId:roomId,userName: userName}});
+        }
+
+        function renderRoomList(list,filterRoomId=null){
+            roomGridContainer.innerHTML = "";
+            let showList = list;
+            if(filterRoomId){
+                showList = list.filter(r=>r.roomId === filterRoomId);
+            }
+            if(showList.length ===0){
+                emptyRoomTip.style.display = "block";
+                if(list.length === 0 && filterRoomId === null){
+                    emptyRoomTip.innerText = "当前服务器暂无房间";
+                }else{
+                    emptyRoomTip.innerText = "暂时没有发现其他房间，自己创建一个吧！";
+                }
+            }else{
+                emptyRoomTip.style.display = "none";
+            }
+            showList.forEach(room=>{
+                const div = document.createElement("div");
+                div.className = "room-item-btn";
+                div.dataset.roomid = room.roomId;
+                div.innerHTML = `
+                    <div class="room-id-text">房间ID：${room.roomId}</div>
+                    <div class="room-count-text">${room.playerCount}/2</div>
+                `;
+                div.onclick = ()=>{
+                    playStoneBoardClick();
+                    joinRoom(room.roomId);
+                }
+                roomGridContainer.appendChild(div);
+            })
+        }
+
+        function searchRoomById(){
+            const val = searchRoomInput.value.trim();
+            if(!/^\d{6}$/.test(val)){
+                showErrorTip("请输入6位数字房间ID！");
+                return;
+            }
+            playStoneBoardClick();
+            renderRoomList(terminalRoomList,val);
+        }
+
+        function openLobbyPage(){
+            isJoining = false;
+            playStoneBoardClick();
+            mainPage.style.display = "none";
+            lobbyPage.classList.add("show");
+            emptyRoomTip.style.display = "block";
+            emptyRoomTip.innerText = "暂时没有发现其他房间，自己创建一个吧！";
+            roomGridContainer.innerHTML = "";
+            sendWsMsg({type:"requestRoomList"});
+        }
+        function backToMainPage(){
+            playStoneBoardClick();
+            lobbyPage.classList.remove("show");
+            mainPage.style.display = "block";
+        }
+        function refreshRoomList(){
+            playStoneBoardClick();
+            roomGridContainer.innerHTML = "";
+            emptyRoomTip.style.display = "block";
+            emptyRoomTip.innerText = "暂时没有发现其他房间，自己创建一个吧！";
+            sendWsMsg({type:"requestRoomList"});
+        }
+
+        //事件绑定
+        btnSingle.onclick = openSingleGame;
+        btnRegret.onclick = regretStep;
+        btnExitGame.onclick = openExitConfirm;
+        closeGameResult.onclick = closeGameResultModal;
+        gameResultOk.onclick = closeGameResultModal;
+        gameResultMask.onclick = function(e){if(e.target === gameResultMask) closeGameResultModal();};
+        closeExitConfirm.onclick = closeExitConfirmModal;
+        exitConfirmOk.onclick = confirmExitGame;
+        exitConfirmMask.onclick = function(e){if(e.target === exitConfirmMask) closeExitConfirmModal();};
+
+        btnHall.onclick = openLobbyPage;
+        btnBackToMain.onclick = backToMainPage;
+        btnRefreshRoom.onclick = refreshRoomList;
+        btnSearchRoom.onclick = searchRoomById;
+        btnOpenCreateRoom.onclick = function(){
+            playStoneBoardClick();
+            createRoomIdInput.value = "";
+            createRoomMask.classList.add("show");
+            document.body.classList.add("lock-scroll");
+        }
+        doCreateRoomBtn.onclick = function(){
+            playStoneBoardClick();
+            createRoom(createRoomIdInput.value.trim());
+        }
+        closeCreateRoom.onclick = ()=> {createRoomMask.classList.remove("show");document.body.classList.remove("lock-scroll");};
+        createRoomMask.onclick = function(e){if(e.target===createRoomMask) {createRoomMask.classList.remove("show");document.body.classList.remove("lock-scroll");}};
+
+        closeCannotJoin.onclick = ()=> {cannotJoinMask.classList.remove("show");document.body.classList.remove("lock-scroll");};
+        cannotJoinOk.onclick = ()=> {cannotJoinMask.classList.remove("show");document.body.classList.remove("lock-scroll");};
+        cannotJoinMask.onclick = function(e){if(e.target === cannotJoinMask) {cannotJoinMask.classList.remove("show");document.body.classList.remove("lock-scroll");}};
+
+        closeErrorTip.onclick = closeErrorTipFunc;
+        errorTipOk.onclick = closeErrorTipFunc;
+        errorTipMask.onclick = function(e){if(e.target === errorTipMask) closeErrorTipFunc();};
+
+        sendChatBtn.onclick = sendChatMessage;
+        chatMsgInput.onkeydown = function(e){
+            if(e.key === "Enter"){
+                e.preventDefault();
+                sendChatMessage();
+            }
+        };
+
+        onlineExitBtn.onclick = function(){
+            playStoneBoardClick();
+            openExitConfirm();
+        }
+
+        function openAboutModal(){
+            playStoneBoardClick();
+            mask.classList.add('show');
+            document.body.classList.add("lock-scroll");
+        }
+        function closeAboutModal(){
+            mask.classList.remove('show');
+            document.body.classList.remove("lock-scroll");
+        }
+        btnAbout.onclick = openAboutModal;
+        closeBtn.onclick = closeAboutModal;
+        mask.onclick = function(e){if(e.target === mask) closeAboutModal();};
+
+        function openAccountModal(){
+            playStoneBoardClick();
+            userNameInput.value = userName;
+            if(!userName){
+                nameTip.innerText = "还没有设置名称，请输入名称。";
+            }else{
+                nameTip.innerText = "";
+            }
+            accountMask.classList.add('show');
+            document.body.classList.add("lock-scroll");
+        }
+        function closeAccountModalFunc(){
+            accountMask.classList.remove('show');
+            document.body.classList.remove("lock-scroll");
+        }
+        function saveUserName(){
+            playStoneBoardClick();
+            const newName = userNameInput.value.trim();
+            userName = newName;
+            localStorage.setItem("cloudGoUserName", userName);
+            closeAccountModalFunc();
+            sendWsMsg({type:"setUserName",data:userName});
+        }
+        btnAccount.onclick = openAccountModal;
+        closeAccountModal.onclick = closeAccountModalFunc;
+        confirmNameBtn.onclick = saveUserName;
+        accountMask.onclick = function(e){if(e.target === accountMask) closeAccountModalFunc();};
+
+        //WebSocket初始化
+        function initWs(){
+            ws = new WebSocket("wss://yjwzq.heiwa01.deno.net");
+            ws.onopen = ()=>{
+                console.log("WebSocket连接成功");
+                if(userName.trim()){
+                    sendWsMsg({type:"setUserName",data:userName});
+                }
+            };
+            ws.onclose = ()=>{
+                showErrorTip("与服务器断开连接！");
+                isJoining = false;
+                closeOnlineGameRoom();
+                ws = null;
+            };
+            ws.onerror = ()=>{
+                showErrorTip("网络异常，连接服务器失败！");
+            };
+            ws.onmessage = function(evt){
+                try{
+                    const msg = JSON.parse(evt.data);
+                    switch(msg.type){
+                        case "roomList":
+                            terminalRoomList = msg.data;
+                            renderRoomList(terminalRoomList);
+                            break;
+                        case "createRoomSuccess":
+                            {
+                                const rid = msg.data.roomId;
+                                sendWsMsg({type:"joinRoom",data:{roomId:rid,userName:userName}});
+                            }
+                            break;
+                        case "joinSuccess":
+                            isJoining = false;
+                            openOnlineGameRoom(msg.data.roomId);
+                            break;
+                        case "joinFail":
+                            isJoining = false;
+                            showErrorTip(msg.data.msg);
+                            break;
+                        case "assignSide":
+                            mySide = msg.data.side;
+                            if(mySide ===1){
+                                selfSideTip.innerText = "你的身份：黑方 ⚫";
+                            }else if(mySide ===2){
+                                selfSideTip.innerText = "你的身份：白方 ⚪";
+                            }else{
+                                selfSideTip.innerText = "";
+                            }
+                            break;
+                        case "roomPlayerUpdate":
+                            onlineRoomPlayerCount = msg.data.count;
+                            if (msg.data.players) {
+                                for (const p of msg.data.players) {
+                                    if (p.side === 1) {
+                                        onlineBlackName.innerText = p.name;
+                                    } else if (p.side === 2) {
+                                        onlineWhiteName.innerText = p.name;
+                                    }
+                                }
+                            }
+                            if(onlineRoomPlayerCount ===0 && onlineGameMask.classList.contains("show")){
+                                showErrorTip("对手已经离开本局游戏！");
+                            }
+                            break;
+                        case "boardUpdate":
+                            onlineBoard = msg.data.board;
+                            drawOnlineBoard();
+                            break;
+                        case "gameOver":
+                            onlineGameOverFlag = true;
+                            onlineWinPoints = msg.data.winPoints;
+                            drawOnlineBoard();
+                            setTimeout(()=>{
+                                showGameResult(msg.data.resultText);
+                            },1000);
+                            break;
+                        case "chatPush":
+                            chatLogBox.innerHTML += `<div>${msg.data.sender}: ${msg.data.msg}</div>`;
+                            chatLogBox.scrollTop = chatLogBox.scrollHeight;
+                            break;
+                        case "opponentLeft":
+                            // 对手离开，强制本玩家退出对局
+                            showErrorTip(msg.data.reason || "对手已离开，本局游戏结束");
+                            closeOnlineGameRoom();
+                            break;
+                        case "error":
+                            showErrorTip(msg.data.msg);
+                            break;
+                    }
+                }catch(err){
+                    console.error("解析后端消息异常",err);
+                }
+            }
+        }
+
+        window.addEventListener("beforeunload", function(){
+            if(currentRoomId && ws && ws.readyState === WebSocket.OPEN){
+                sendWsMsg({type:"leaveRoom",data:{roomId:currentRoomId}});
+            }
+        });
+
+        document.addEventListener('keydown',function(e){
+            if(document.activeElement === chatMsgInput){
+                if(e.key === "Escape"){
+                    chatMsgInput.blur();
+                    return;
+                }
+            }
+            if(e.key === 'Escape'){
+                if(onlineGameMask.classList.contains("show")){
+                    openExitConfirm();
+                    return;
+                }
+                closeAboutModal();
+                closeAccountModalFunc();
+                closeGameResultModal();
+                closeExitConfirmModal();
+                createRoomMask.classList.remove("show");
+                cannotJoinMask.classList.remove("show");
+                closeErrorTipFunc();
+            }
+        })
+
+        //页面加载完成启动连接
+        initWs();
+</script>
+</body>
+</html>
